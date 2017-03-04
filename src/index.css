@@ -1,0 +1,41 @@
+.btn.btn-info.btn-xs.btn-block {
+    color: white;
+}
+
+.panel.panel-info>.panel-heading {
+    color: white;
+}
+
+.btn.btn-success {
+    color: white;
+}
+
+#logoutBtn {
+    float: right;
+}
+
+#my-signin2 {
+    margin-top: 5px;
+    float: right;
+}
+
+.model-btn {
+    margin-top: 0px;
+}
+
+.panel {
+    box-shadow: rgba(0, 0, 0, 0.117647) 0px 1px 6px 0px, rgba(0, 0, 0, 0.117647) 0px 1px 6px 0px !important;
+    border-radius: 2px !important;
+    border-width: 0px !important;
+    border-style: initial !important;
+    border-color: initial !important;
+    border-image: initial !important;
+}
+
+.checkbox label {
+    padding-left: 0px !important;
+}
+
+body>.container-fluid {
+    margin-top: 30px;
+}

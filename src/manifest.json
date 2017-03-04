@@ -1,0 +1,41 @@
+{
+  "name": "NCUE 課程情報站",
+  "description": "NCUE 課程評論系統",
+  "homepage_url": "https://github.com/ALiangLiang/NCUE-Plus",
+  "version": "0.0.3",
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [{
+    "js": [
+      "lib/platform.js",
+      "lib/gapi_auth2.js",
+      "lib/gapi_signin2.js",
+      "lib/jquery.min.js",
+      "lib/bootstrap.min.js",
+      "index.js"
+    ],
+    "css": [
+      "lib/bootstrap-material-design.min.css",
+      "lib/ripples.min.css",
+      "lib/icon.css",
+      "index.css"
+    ],
+    "run_at": "document_end",
+    "matches": [
+      "*://*.ncue.edu.tw/deanv2/other/ob010"
+    ]
+  }],
+  "icons": {
+    "128": "icons/icon128.png",
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png"
+  },
+  "permissions": [
+    "tabs",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "content_security_policy": "script-src 'self' https://ssl.google-analytics.com https://www.google.com https://checkout.google.com; object-src 'self'",
+  "manifest_version": 2
+}

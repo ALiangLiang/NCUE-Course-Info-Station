@@ -1,0 +1,35 @@
+{
+	"name": "NCUE-Plus",
+	"description": "NCUE 課程評論系統",
+	"version" : "0.0.3",
+	"homepage" : "https://github.com/ALiangLiang/NCUE-Plus",
+	"authors" : "ALiangLiang",
+	"license" : "MIT",
+	"ignore" : [
+		"**/.*",
+		"node_modules",
+		"bower_components",
+		"src",
+		"test",
+		"tests"
+	],
+	"dependencies" : {
+		"jquery" : "~2.1.4",
+		"bootstrap" : "~3.3.7"
+	},
+	"repository" : {
+		"type" : "git",
+		"url" : "https://github.com/ALiangLiang/NCUE-Plus"
+	},
+	"exportsOverride" : {
+		"jquery" : {
+			"" : "dist/jquery.min.js"
+		},
+		"bootstrap" : {
+			"" : [
+				"dist/css/bootstrap.min.css",
+				"dist/js/bootstrap.min.js"
+			]
+		}
+	}
+}

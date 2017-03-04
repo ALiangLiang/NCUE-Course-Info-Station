@@ -1,0 +1,17 @@
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+/app/font/
+/dist/
+node_modules
+bower_components
+
+*.cer
+*.pfx
+*.pvk
+*.zip
+
+npm-debug.log
+npm-debug.log.*
+tmp.bat
