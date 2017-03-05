@@ -13,11 +13,13 @@
       "lib/gapi_signin2.js",
       "lib/jquery.min.js",
       "lib/bootstrap.min.js",
+      "lib/snackbar.min.js",
       "lib/vue.min.js",
       "index.js"
     ],
     "css": [
       "lib/bootstrap-material-design.min.css",
+      "lib/snackbar.min.css",
       "lib/ripples.min.css",
       "lib/icon.css",
       "index.css"

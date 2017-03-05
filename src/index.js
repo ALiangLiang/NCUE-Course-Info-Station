@@ -7,62 +7,59 @@ const
   },
   padLeft = (str, lenght) => (str.toString().length >= lenght) ? str.toString() : padLeft('0' + str.toString(), lenght);
 
-/* 建立課程評價浮動視窗 */
-const modelContainer = document.createElement('div');
-modelContainer.innerHTML = `<div class="modal fade" id="model" tabindex="-1" role="dialog" aria-labelledby="comment-head">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="comment-head">課程名稱載入中...</h4>
-        <button type="button" class="btn" data-toggle="tooltip" data-placement="left" data-original-title="跪求評論">跪求評論<span id="requestCount" class="badge">0</span></button>
-        <button id="collapseBtn" class="btn btn-primary btn-fab" type="button" data-toggle="collapse" data-target="#comment-form" aria-expanded="false" aria-controls="comment-form"><i class="material-icons">add</i></button>
-      </div>
-      <div id="comment-body" class="modal-body">
-        <div class="collapse" id="comment-form">
-          <div class="well">
-            <div class="form-group">
-              <label for="content">評論內容</label>
-              <textarea id="content" class="form-control" rows="5"></textarea>
+Vue.config.devtools = true;
+
+Vue.component('model', {
+  props: ['id', 'title', 'requestCount', 'comments'],
+  template: `
+    <div class="modal fade" id="model" tabindex="-1" role="dialog" aria-labelledby="comment-head">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="comment-head">{{title}}.</h4>
+            <button id="requestBtn" type="button" class="btn btn-raised" data-toggle="tooltip" data-placement="left" data-original-title="跪求評論">跪求評論<span id="requestCount" class="badge">{{requestCount}}</span></button>
+            <button id="collapseBtn" class="btn btn-danger btn-fab" type="button" data-toggle="collapse" data-target="#comment-form" aria-expanded="false" aria-controls="comment-form"><i class="material-icons">add</i></button>
+          </div>
+          <div id="comment-body" class="modal-body">
+            <div class="collapse" id="comment-form">
+              <div class="well">
+                <div class="form-group">
+                  <label for="content">評論內容</label>
+                  <textarea id="content" class="form-control" rows="5"></textarea>
+                </div>
+                <div class="checkbox">
+                  <label>
+                  <input id="anonymous" type="checkbox">
+                    <span class="checkbox-material">
+                      <span class="check"></span>
+                    </span>匿名發表
+                  </label>
+                </div>
+                <a id="comment" class="btn btn-info btn-fab">
+                  <i class="material-icons">mode_edit</i>
+                  <div class="ripple-container"></div>
+                </a>
+              </div>
             </div>
-            <div class="checkbox">
-              <label>
-              <input id="anonymous" type="checkbox">
-                <span class="checkbox-material">
-                  <span class="check"></span>
-                </span>匿名發表
-              </label>
+            <div id="comments">
+              <card
+                is="card"
+                v-for="comment in comments"
+                v-bind:id="comment.id"
+                v-bind:title="comment.title"
+                v-bind:content="comment.content"
+                v-bind:thumb-count="comment.thumbCount">
+              </card>
             </div>
-            <a id="comment" class="btn btn-info btn-fab">
-              <i class="material-icons">mode_edit</i>
-              <div class="ripple-container"></div>
-            </a>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">關閉</button>
           </div>
         </div>
-        <div id="comments">
-          <card
-            is="card"
-            v-for="comment in comments"
-            v-bind:id="comment.id"
-            v-bind:title="comment.title"
-            v-bind:content="comment.content"
-            v-bind:thumb-count="comment.thumbCount">
-          </card>
-        </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">關閉</button>
-      </div>
-    </div>
-  </div>
-</div>`;
-const
-  model = modelContainer.querySelector('#model'),
-  commentHead = model.querySelector('#comment-head'),
-  commentBody = model.querySelector('#comments'),
-  commentForm = model.querySelector('#content'),
-  anonymousBtn = model.querySelector('#anonymous');
-document.body.appendChild(model);
+    </div>`
+});
 
 Vue.component('card', {
   props: ['id', 'title', 'content', 'thumbCount'],
@@ -81,55 +78,133 @@ Vue.component('card', {
     </div>`
 });
 
-const vm = new Vue({
-  el: '#comments',
+/* 建立 google 登入鈕 */
+Vue.component('signin', {
+  props: ['isLogin'],
+  template: `
+    <a
+      id="signin"
+      v-on:click.stop="loginVm.login"
+      v-bind:class="['btn', ((isLogin) ? 'btn-info' : 'btn-danger'), 'btn-raised']">
+      <i class="material-icons">exit_to_app</i>
+      {{((isLogin) ? '登出' : '登入') + ' Google'}}
+    </a>`
+});
+
+/* 建立課程評價浮動視窗 */
+const
+  injection = document.createElement('div'),
+  model = document.createElement('model');
+model.setAttribute('v-bind:id', 'id');
+model.setAttribute('v-bind:title', 'title');
+model.setAttribute('v-bind:request-count', 'requestCount');
+model.setAttribute('v-bind:comments', 'comments');
+injection.id = 'injection';
+injection.appendChild(model);
+document.body.appendChild(injection);
+
+/* 插入登入按鈕 */
+const signin = document.createElement('signin');
+signin.setAttribute('v-bind:is-login', 'isLogin');
+document.body.querySelector('#mynav > div.container-fluid').appendChild(signin);
+
+const loginVm = new Vue({
+  el: '#mynav > div.container-fluid',
   data: {
+    isLogin: false
+  },
+  created: function() {
+    /* 初始化 google oauth2 套件 */
+    gapi.auth2.init({
+        client_id: '90791698805-qttq6in0t4q6bldl6ro39f3hp1i2fi9r.apps.googleusercontent.com',
+        hosted_domain: 'gm.ncue.edu.tw'
+      })
+      .then((e) => {
+        this.isLogin = gapi.auth2.getAuthInstance().currentUser.get().isSignedIn();
+        $.snackbar({
+          content: (this.isLogin) ? '已經登入 Google 帳戶。' : '尚未登入 Google 帳戶。'
+        });
+      });
+    $('[data-toggle="tooltip"]').tooltip();
+    console.log('登入實例初始化完畢');
+  },
+  methods: {
+    login: function() {
+      console.log(this.isLogin);
+      if (this.isLogin) {
+        gapi.auth2.getAuthInstance().signOut()
+          .then(() => {
+            this.isLogin = false;
+            $.snackbar({
+              content: '成功登出。'
+            });
+            console.log('logout');
+          });
+      } else {
+        gapi.auth2.getAuthInstance().signIn()
+          .then(() => {
+            this.isLogin = true;
+            $.snackbar({
+              content: '成功登入。'
+            });
+            console.log('login');
+          });
+      }
+    }
+  }
+});
+
+const vm = new Vue({
+  el: '#injection',
+  data: {
+    id: null,
+    title: '課程載入中',
+    requestCount: 0,
     comments: []
+  },
+  created: function() {
+    $('[data-toggle="tooltip"]').tooltip();
+    console.log('Model 實例初始化完畢');
   },
   methods: {
     thumb: function(id, event) {
-      const currentTarget = event.currentTarget;
-      if (!currentTarget.classList.contains('active'))
-        fetch(DOMAIN + '/thumb', {
-          method: 'POST',
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            commentId: id,
-            token: gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token,
-          })
-        })
-        .then((res) => {
-          if (res.ok) {
-            const num = currentTarget.querySelector('span.badge');
-            num.innerText = Number(num.innerText) + 1;
-            currentTarget.classList.toggle('active', true);
-          }
+      const
+        currentTarget = event.currentTarget,
+        isActive = currentTarget.classList.contains('active'),
+        url = (!isActive) ? DOMAIN + '/thumb' : `${DOMAIN}/thumb/${id}`,
+        method = (!isActive) ? 'POST' : 'DELETE',
+        body = JSON.stringify({
+          commentId: (!isActive) ? id : void 0,
+          token: gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token,
         });
-      else
-        fetch(`${DOMAIN}/thumb/${id}`, {
-          method: 'DELETE',
+      fetch(url, {
+          method: method,
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            token: gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token,
-          })
+          body: body
         })
         .then((res) => {
           if (res.ok) {
             const num = currentTarget.querySelector('span.badge');
-            num.innerText = Number(num.innerText) - 1;
-            currentTarget.classList.toggle('active', false);
+            num.innerText = (!isActive) ? Number(num.innerText) + 1 : Number(num.innerText) - 1;
+            currentTarget.classList.toggle('active', !isActive);
+            $.snackbar({
+              content: (!isActive) ? '已認同' : '取消認同'
+            });
           }
         });
     }
   }
 });
+
 const
+  commentForm = document.querySelector('#content'),
+  anonymousBtn = document.querySelector('#anonymous');
+
+const
+  commentBtn = document.getElementById('comment'),
   observer = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
       if (mutation.type !== 'childList')
@@ -159,7 +234,7 @@ const
             .then((response) => response.json())
             .then((json) => {
               loadingIcon.stop();
-              commentHead.innerText = this.getAttribute('data-header');
+              vm.title = this.getAttribute('data-header');
               document.getElementById('requestCount').innerText = json.requestCount;
               vm.comments = json.comments.reverse().map((e) => {
                 const
@@ -206,10 +281,17 @@ const
                           };
                         vm.comments.unshift(newComment);
                         commentForm.value = '';
+                        $.snackbar({
+                          content: '成功發表評論'
+                        });
                         $('#comment-form').collapse('hide');
                       });
-                    } else
+                    } else {
+                      $.snackbar({
+                        content: '發表評論失敗'
+                      });
                       gapi.auth2.getAuthInstance().signIn();
+                    }
                   });
               };
               $('#model').modal('show');
@@ -226,60 +308,6 @@ const
     characterData: true
   };
 observer.observe(target, config);
-
-/* 建立 google 登入鈕 */
-const div = document.createElement('div');
-div.id = 'my-signin2';
-const
-  logoutA = document.createElement('a'),
-  logoutI = document.createElement('i'),
-  logoutDiv = document.createElement('div'),
-  signBtnToggle = () => {
-    if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
-      div.style.display = 'none';
-      logoutA.style.display = '';
-    } else {
-      div.style.display = '';
-      logoutA.style.display = 'none';
-    }
-  };
-logoutA.onclick = () => gapi.auth2.getAuthInstance().signOut().then(() => signBtnToggle());
-logoutA.id = 'logoutBtn';
-logoutA.classList = 'btn btn-info btn-fab';
-logoutI.classList = 'material-icons';
-logoutI.innerText = 'exit_to_app';
-logoutDiv.classList = 'ripple-container';
-logoutA.appendChild(logoutI);
-logoutA.appendChild(logoutDiv);
-document.body.querySelector('#mynav > div.container-fluid').appendChild(div);
-document.body.querySelector('#mynav > div.container-fluid').appendChild(logoutA);
-
-/* 初始化 google oauth2 套件 */
-gapi.auth2.init({
-  client_id: '90791698805-qttq6in0t4q6bldl6ro39f3hp1i2fi9r.apps.googleusercontent.com',
-  hosted_domain: 'gm.ncue.edu.tw'
-});
-
-/* 渲染 google 登入紐 */
-gapi.signin2.render('my-signin2', {
-  scope: 'profile email',
-  width: 240,
-  height: 50,
-  longtitle: true,
-  onsuccess: onSuccess,
-  onfailure: onFailure
-});
-
-signBtnToggle();
-
-function onSuccess(googleUser) {
-  console.log(googleUser.isSignedIn());
-  signBtnToggle();
-}
-
-function onFailure(error) {
-  console.log(error);
-}
 
 if (localStorage['remind'] !== 'true') {
   const
