@@ -13,6 +13,7 @@
       "lib/gapi_signin2.js",
       "lib/jquery.min.js",
       "lib/bootstrap.min.js",
+      "lib/vue.min.js",
       "index.js"
     ],
     "css": [

@@ -1,4 +1,5 @@
 const
+  DOMAIN = 'http://aliangliang.com.tw:3000',
   target = document.getElementById('result'),
   loadingIcon = {
     start: () => document.getElementById('wait').style.display = '',
@@ -7,40 +8,47 @@ const
   padLeft = (str, lenght) => (str.toString().length >= lenght) ? str.toString() : padLeft('0' + str.toString(), lenght);
 
 /* 建立課程評價浮動視窗 */
-const model = document.createElement('div');
-model.innerHTML = `<div class="modal fade" id="model" tabindex="-1" role="dialog" aria-labelledby="comment-head">
+const modelContainer = document.createElement('div');
+modelContainer.innerHTML = `<div class="modal fade" id="model" tabindex="-1" role="dialog" aria-labelledby="comment-head">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
         <h4 class="modal-title" id="comment-head">課程名稱載入中...</h4>
+        <button type="button" class="btn" data-toggle="tooltip" data-placement="left" data-original-title="跪求評論">跪求評論<span id="requestCount" class="badge">0</span></button>
+        <button id="collapseBtn" class="btn btn-primary btn-fab" type="button" data-toggle="collapse" data-target="#comment-form" aria-expanded="false" aria-controls="comment-form"><i class="material-icons">add</i></button>
       </div>
       <div id="comment-body" class="modal-body">
-      <ul class="nav nav-tabs" role="tablist">
-        <li role="presentation" class="active"><a href="#comments" aria-controls="comments" role="tab" data-toggle="tab">評論</a></li>
-        <li role="presentation"><a href="#comment-form" aria-controls="comment-form" role="tab" data-toggle="tab" class="btn-info">我要評論</a></li>
-      </ul>
-      <div class="tab-content">
-        <div role="tabpanel" class="tab-pane fade active in" id="comments">課程評論載入中...</div>
-        <div role="tabpanel" class="tab-pane fade" id="comment-form">
-          <div class="form-group">
-            <label for="content">評論內容</label>
-            <textarea id="content" class="form-control" rows="5"></textarea>
+        <div class="collapse" id="comment-form">
+          <div class="well">
+            <div class="form-group">
+              <label for="content">評論內容</label>
+              <textarea id="content" class="form-control" rows="5"></textarea>
+            </div>
+            <div class="checkbox">
+              <label>
+              <input id="anonymous" type="checkbox">
+                <span class="checkbox-material">
+                  <span class="check"></span>
+                </span>匿名發表
+              </label>
+            </div>
+            <a id="comment" class="btn btn-info btn-fab">
+              <i class="material-icons">mode_edit</i>
+              <div class="ripple-container"></div>
+            </a>
           </div>
-          <div class="checkbox">
-            <label>
-            <input id="anonymous" type="checkbox">
-              <span class="checkbox-material">
-                <span class="check"></span>
-              </span>匿名發表
-            </label>
-          </div>
-          <a id="comment" class="btn btn-info btn-fab">
-            <i class="material-icons">mode_edit</i>
-            <div class="ripple-container"></div>
-          </a>
         </div>
-      </div>
+        <div id="comments">
+          <card
+            is="card"
+            v-for="comment in comments"
+            v-bind:id="comment.id"
+            v-bind:title="comment.title"
+            v-bind:content="comment.content"
+            v-bind:thumb-count="comment.thumbCount">
+          </card>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">關閉</button>
@@ -49,34 +57,79 @@ model.innerHTML = `<div class="modal fade" id="model" tabindex="-1" role="dialog
   </div>
 </div>`;
 const
+  model = modelContainer.querySelector('#model'),
   commentHead = model.querySelector('#comment-head'),
   commentBody = model.querySelector('#comments'),
   commentForm = model.querySelector('#content'),
   anonymousBtn = model.querySelector('#anonymous');
-document.body.appendChild(model.querySelector('#model'));
+document.body.appendChild(model);
 
-/* 綁定課程查詢事件，並建立課程平季查詢按鈕 */
-const
-  commentBtn = document.getElementById('comment'),
-  cardGenerator = (title, content, time) => {
-    const
-      panel = document.createElement('div'),
-      panelHead = document.createElement('div'),
-      h3 = document.createElement('h3'),
-      panelBody = document.createElement('div'),
-      date = new Date(time),
-      timeString = `${date.getYear() + 1900}/${date.getMonth() + 1}/${date.getDate()} ${padLeft(date.getHours(),2)}:${padLeft(date.getMinutes(), 2)}`;
-    panel.classList = 'panel panel-info';
-    panelHead.classList = 'panel-heading';
-    h3.classList = 'panel-title';
-    h3.innerText = title + ' ' + timeString;
-    panelBody.classList = 'panel-body';
-    panelBody.innerText = content;
-    panelHead.appendChild(h3);
-    panel.appendChild(panelHead);
-    panel.appendChild(panelBody);
-    return panel;
+Vue.component('card', {
+  props: ['id', 'title', 'content', 'thumbCount'],
+  template: `
+    <div class="panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">{{title}}</h3>
+      </div>
+      <div class="panel-body">{{content}}</div>
+      <div class="modal-footer">
+        <button v-on:click.stop="vm.thumb(id, $event)" type="button" class="btn btn-info" data-toggle="tooltip" data-placement="left" data-original-title="認同請+1">
+          <i class="material-icons">plus_one</i>
+          <span class="badge">{{thumbCount}}</span>
+        </button>
+      </div>
+    </div>`
+});
+
+const vm = new Vue({
+  el: '#comments',
+  data: {
+    comments: []
   },
+  methods: {
+    thumb: function(id, event) {
+      const currentTarget = event.currentTarget;
+      if (!currentTarget.classList.contains('active'))
+        fetch(DOMAIN + '/thumb', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            commentId: id,
+            token: gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token,
+          })
+        })
+        .then((res) => {
+          if (res.ok) {
+            const num = currentTarget.querySelector('span.badge');
+            num.innerText = Number(num.innerText) + 1;
+            currentTarget.classList.toggle('active', true);
+          }
+        });
+      else
+        fetch(`${DOMAIN}/thumb/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            token: gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token,
+          })
+        })
+        .then((res) => {
+          if (res.ok) {
+            const num = currentTarget.querySelector('span.badge');
+            num.innerText = Number(num.innerText) - 1;
+            currentTarget.classList.toggle('active', false);
+          }
+        });
+    }
+  }
+});
+const
   observer = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
       if (mutation.type !== 'childList')
@@ -102,19 +155,28 @@ const
         btn.setAttribute('data-header', `${courseClass} ${courseName}`);
         btn.onclick = function() {
           loadingIcon.start();
-          fetch(`http://aliangliang.com.tw:3000/?class=${this.getAttribute('data-class')}&courseName=${this.getAttribute('data-course-name')}`)
+          fetch(`${DOMAIN}/course?class=${this.getAttribute('data-class')}&courseName=${this.getAttribute('data-course-name')}`)
             .then((response) => response.json())
             .then((json) => {
               loadingIcon.stop();
               commentHead.innerText = this.getAttribute('data-header');
-              while (commentBody.firstChild)
-                commentBody.removeChild(commentBody.firstChild);
-              json.comments.forEach((e) => commentBody.appendChild(cardGenerator(e.author, e.content, e.time)));
+              document.getElementById('requestCount').innerText = json.requestCount;
+              vm.comments = json.comments.reverse().map((e) => {
+                const
+                  date = new Date(e.time),
+                  timeString = `${date.getYear() + 1900}/${date.getMonth() + 1}/${date.getDate()} ${padLeft(date.getHours(),2)}:${padLeft(date.getMinutes(), 2)}`;
+                return {
+                  id: e.id,
+                  title: `${e.author} ${timeString}`,
+                  content: e.content,
+                  thumbCount: e.thumbCount
+                };
+              });
               commentBtn.onclick = () => {
                 if (commentForm.value.trim() === '')
                   return;
                 loadingIcon.start();
-                fetch(new Request('http://aliangliang.com.tw:3000/', {
+                fetch(new Request(DOMAIN + '/comment', {
                     method: 'POST',
                     headers: {
                       'Accept': 'application/json',
@@ -128,13 +190,24 @@ const
                       token: gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().id_token,
                     })
                   }))
-                  .then((response) => response.json())
-                  .then((result) => {
+                  .then((response) => [response.json(), response.ok])
+                  .then(([promise, ok]) => {
                     loadingIcon.stop();
-                    if (result.isSuccess) {
-                      commentBody.appendChild(cardGenerator(result.author, result.content, result.time));
-                      $('[href="#comments"]').tab('show');
-                      commentForm.value = '';
+                    if (ok) {
+                      return promise.then((result) => {
+                        const
+                          date = new Date(result.time),
+                          timeString = `${date.getYear() + 1900}/${date.getMonth() + 1}/${date.getDate()} ${padLeft(date.getHours(),2)}:${padLeft(date.getMinutes(), 2)}`,
+                          newComment = {
+                            id: result.id,
+                            title: `${result.author} ${timeString}`,
+                            content: result.content,
+                            thumbCount: result.thumbCount
+                          };
+                        vm.comments.unshift(newComment);
+                        commentForm.value = '';
+                        $('#comment-form').collapse('hide');
+                      });
                     } else
                       gapi.auth2.getAuthInstance().signIn();
                   });
